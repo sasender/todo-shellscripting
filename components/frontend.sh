@@ -1,38 +1,43 @@
 #!/bin/bash
 
 source components/common.sh
-
-DOMAIN="zs-devops-01.site"
-
 OS_PREREQ
 
 Head "Installing Nginx"
-apt install nginx -y &>>$LOG
-Stat $?
+apt install nginx -y &>>"$LOG"
+systemctl start nginx
+STAT $?
 
-Head "Installing Npm"
+Head "Installing npm"
 apt install npm -y &>>$LOG
-Stat $?
+STAT $?
+
+Head "Downloading git file"
+cd /var/www/html
 
 DOWNLOAD_COMPONENT
 
-Head "Extract Downloaded Archive"
-cd /var/www/html && unzip -o /tmp/frontend.zip &>>$LOG && rm -rf frontend.zip && rm -rf frontend && mv frontend-main frontend && cd frontend
-Stat $?
+Head "Install Npm"
+npm install &>>$LOG && npm audit fix
+STAT $?
 
+Head "Run build"
+npm run build &>>${LOG}
+STAT $?
 
-Head "update frontend configuration"
-cd /var/www/html/frontend  && sudo npm install &>>$LOG && npm run build &>>$LOG 
-Stat $?
+Head "change path in sites-enabled file"
+sed -i -e 's+/var/www/html+/var/www/html/frontend/dist+g' /etc/nginx/sites-enabled/default
+STAT $?
 
-
-Head "Update Nginx Configuration"
-mv todo.conf /etc/nginx/sites-enabled/todo.conf
-for comp in login todo ; do
-  sed -i -e "/$comp/ s/localhost/${comp}.${DOMAIN}/" /etc/nginx/sites-enabled/todo.conf
-done
-Stat $?
-
-Head "ReStart Nginx service"
+Head "Restart Nginx"
 systemctl restart nginx
-Stat $?
+STAT $?
+
+Head "Create frontend service file"
+mv /var/www/html/frontend/systemd.service /etc/systemd/system/frontend.service
+STAT $?
+
+Head "Start the frontend service"
+systemctl daemon-reload && systemctl start frontend && systemctl status frontend
+STAT $?
+
