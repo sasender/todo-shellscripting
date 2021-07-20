@@ -29,6 +29,6 @@ ERROR() {
 
  DOWNLOAD_COMPONENT() {
   Head "Downloading ${COMPONENT} Component"
-  curl -s -L -o /tmp/${COMPONENT}.zip "https://github.com/swathi-zelarsoft680/${COMPONENT}/archive/main.zip"
+  curl -s -L -o /tmp/${COMPONENT}.zip "https://github.com/sasender/${COMPONENT}/archive/main.zip"
   Stat $?
 }
